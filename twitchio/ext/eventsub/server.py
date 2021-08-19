@@ -46,15 +46,17 @@ class EventSubClient(web.Application):
     async def delete_subscription(self, subscription_id: str):
         await self._http.delete_subscription(subscription_id)
 
-    async def get_subscriptions(self,
-                                status: Literal[
-                                    "enabled",
-                                    "webhook_callback_verification_pending",
-                                    "webhook_callback_verification_failed",
-                                    "notification_failures_exceeded",
-                                    "authorization_revoked",
-                                    "user_removed"
-                                ] = None):
+    async def get_subscriptions(
+        self,
+        status: Literal[
+            "enabled",
+            "webhook_callback_verification_pending",
+            "webhook_callback_verification_failed",
+            "notification_failures_exceeded",
+            "authorization_revoked",
+            "user_removed",
+        ] = None,
+    ):
         # All possible statuses are:
         #
         #     enabled: designates that the subscription is in an operable state and is valid.
