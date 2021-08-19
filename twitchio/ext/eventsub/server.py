@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import socket
-from typing import Union, Tuple, Type, Optional, Any
+from typing import Union, Tuple, Type, Optional, Any, Literal
 from collections.abc import Iterable
 
 import yarl
@@ -36,9 +36,9 @@ class EventSubClient(web.Application):
         self.router.add_post(yarl.URL(self.route).path, self._callback)
         self._closing = asyncio.Event()
 
-    async def listen(self, **kwargs):
+    async def listen(self, port=4000, **kwargs):
         self._closing.clear()
-        await self.client.loop.create_task(self._run_app(**kwargs))
+        await self.client.loop.create_task(self._run_app(port=port, **kwargs))
 
     def stop(self):
         self._closing.set()
@@ -46,7 +46,15 @@ class EventSubClient(web.Application):
     async def delete_subscription(self, subscription_id: str):
         await self._http.delete_subscription(subscription_id)
 
-    async def get_subscriptions(self, status: str = None):
+    async def get_subscriptions(self,
+                                status: Literal[
+                                    "enabled",
+                                    "webhook_callback_verification_pending",
+                                    "webhook_callback_verification_failed",
+                                    "notification_failures_exceeded",
+                                    "authorization_revoked",
+                                    "user_removed"
+                                ] = None):
         # All possible statuses are:
         #
         #     enabled: designates that the subscription is in an operable state and is valid.
