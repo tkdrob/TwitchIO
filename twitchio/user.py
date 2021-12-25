@@ -24,6 +24,7 @@ DEALINGS IN THE SOFTWARE.
 
 import datetime
 import time
+from re import sub
 from typing import TYPE_CHECKING, List, Optional, Union, Tuple
 
 from .enums import BroadcasterTypeEnum, UserTypeEnum
@@ -837,7 +838,7 @@ class SearchUser(PartialUser):
         self.id: int = int(data["id"])
         self.game_id: str = data["game_id"]
         self.title: str = data["title"]
-        self.thumbnail_url: str = data["thumbnail_url"]
+        self.thumbnail_url: str = sub("{width}x{height}", "300x300", data["thumbnail_url"])
         self.language: str = data["broadcaster_language"]
         self.live: bool = data["is_live"]
         self.started_at = datetime.datetime.strptime(data["started_at"], "%Y-%m-%dT%H:%M:%SZ") if self.live else None

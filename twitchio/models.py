@@ -23,6 +23,7 @@ DEALINGS IN THE SOFTWARE.
 """
 
 import datetime
+from re import sub
 from typing import Optional, Union, TYPE_CHECKING, List, Dict
 
 from . import enums
@@ -490,7 +491,7 @@ class Video:
         self.created_at = parse_timestamp(data["created_at"])
         self.published_at = parse_timestamp(data["published_at"])
         self.url: str = data["url"]
-        self.thumbnail_url: str = data["thumbnail_url"]
+        self.thumbnail_url: str = sub("{width}x{height}", "300x300", data["thumbnail_url"])
         self.viewable: str = data["viewable"]
         self.view_count: int = data["view_count"]
         self.language: str = data["language"]
@@ -567,7 +568,7 @@ class Stream:
         self.viewer_count: int = data["viewer_count"]
         self.started_at = parse_timestamp(data["started_at"])
         self.language: str = data["language"]
-        self.thumbnail_url: str = data["thumbnail_url"]
+        self.thumbnail_url: str = sub("{width}x{height}", "300x300", data["thumbnail_url"])
         self.tag_ids: List[str] = data["tag_ids"]
         self.is_mature: bool = data["is_mature"]
 
