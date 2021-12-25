@@ -60,6 +60,8 @@ class Client:
         The event loop the client will use to run.
     heartbeat: Optional[float]
         An optional float in seconds to send a PING message to the server. Defaults to 30.0.
+    close_loop: Optional[bool]
+        Choose whether the loop should be closed when Client.close() is called.
 
     Attributes
     ------------
@@ -75,6 +77,7 @@ class Client:
         initial_channels: Union[list, tuple, Callable] = None,
         loop: asyncio.AbstractEventLoop = None,
         heartbeat: Optional[float] = 30.0,
+        close_loop: bool = False,
     ):
 
         self.loop: asyncio.AbstractEventLoop = loop or asyncio.get_event_loop()
@@ -89,6 +92,7 @@ class Client:
             loop=self.loop,
             initial_channels=initial_channels,
             heartbeat=heartbeat,
+            close_loop=close_loop,
         )
 
         self._events = {}
@@ -102,6 +106,7 @@ class Client:
         *,
         loop: asyncio.AbstractEventLoop = None,
         heartbeat: Optional[float] = 30.0,
+        close_loop: bool = False,
     ) -> "Client":
         """
         creates a client application token from your client credentials.
@@ -122,6 +127,8 @@ class Client:
             An application Client Secret used to generate Access Tokens automatically.
         loop: Optional[:class:`asyncio.AbstractEventLoop`]
             The event loop the client will use to run.
+        close_loop: Optional[bool]
+            Choose whether the loop should be closed when Client.close() is called.
 
         Returns
         --------
@@ -136,6 +143,7 @@ class Client:
             loop=self.loop,
             initial_channels=None,
             heartbeat=self._heartbeat,
+            close_loop=close_loop,
         )  # The only reason we're even creating this is to avoid attribute errors
         self._events = {}
         self._waiting = []

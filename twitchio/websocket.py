@@ -57,11 +57,13 @@ class WSConnection:
         loop: asyncio.AbstractEventLoop,
         heartbeat: Optional[float],
         client: "Client",
+        close_loop: bool,
         token: str = None,
         modes: tuple = None,
         initial_channels: List[str] = None,
     ):
         self._loop = loop
+        self._close_loop = close_loop
         self._backoff = ExponentialBackoff()
         self._keeper: Optional[asyncio.Task] = None
         self._websocket = None
@@ -484,4 +486,5 @@ class WSConnection:
             fut.cancel()
 
         await self._websocket.close()
-        self._loop.stop()
+        if self._close_loop:
+            self._loop.stop()
