@@ -62,6 +62,7 @@ class Client:
         An optional float in seconds to send a PING message to the server. Defaults to 30.0.
     close_loop: Optional[bool]
         Choose whether the loop should be closed when Client.close() is called.
+        Useful if the program using this package is running on the same event loop.
 
     Attributes
     ------------
@@ -129,6 +130,7 @@ class Client:
             The event loop the client will use to run.
         close_loop: Optional[bool]
             Choose whether the loop should be closed when Client.close() is called.
+            Useful if the program using this package is running on the same event loop.
 
         Returns
         --------
