@@ -54,14 +54,12 @@ class WSConnection:
     def __init__(
         self,
         *,
-        loop: asyncio.AbstractEventLoop,
         heartbeat: Optional[float],
         client: "Client",
         token: str = None,
         modes: tuple = None,
         initial_channels: List[str] = None,
     ):
-        self._loop = loop
         self._backoff = ExponentialBackoff()
         self._keeper: Optional[asyncio.Task] = None
         self._websocket = None
@@ -272,7 +270,7 @@ class WSConnection:
         channel = re.sub("[#]", "", entry).lower()
         await self.send(f"JOIN #{channel}\r\n")
 
-        self._join_pending[channel] = fut = self._loop.create_future()
+        self._join_pending[channel] = fut = asyncio.get_event_loop().create_future()
         asyncio.create_task(self._join_future_handle(fut, channel))
 
     async def _join_future_handle(self, fut: asyncio.Future, channel: str):
@@ -484,4 +482,3 @@ class WSConnection:
             fut.cancel()
 
         await self._websocket.close()
-        self._loop.stop()

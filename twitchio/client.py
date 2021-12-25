@@ -56,8 +56,6 @@ class Client:
     initial_channels: Optional[Union[:class:`list`, :class:`tuple`, Callable]]
         An optional list, tuple or callable which contains channel names to connect to on startup.
         If this is a callable, it must return a list or tuple.
-    loop: Optional[:class:`asyncio.AbstractEventLoop`]
-        The event loop the client will use to run.
     heartbeat: Optional[float]
         An optional float in seconds to send a PING message to the server. Defaults to 30.0.
 
@@ -73,11 +71,11 @@ class Client:
         *,
         client_secret: str = None,
         initial_channels: Union[list, tuple, Callable] = None,
-        loop: asyncio.AbstractEventLoop = None,
         heartbeat: Optional[float] = 30.0,
+        **kwargs: Any,
     ):
 
-        self.loop: asyncio.AbstractEventLoop = loop or asyncio.get_event_loop()
+        self.loop = asyncio.get_event_loop()
         self._heartbeat = heartbeat
 
         token = token.replace("oauth:", "")
@@ -86,7 +84,6 @@ class Client:
         self._connection = WSConnection(
             client=self,
             token=token,
-            loop=self.loop,
             initial_channels=initial_channels,
             heartbeat=heartbeat,
         )
@@ -100,8 +97,8 @@ class Client:
         client_id: str,
         client_secret: str,
         *,
-        loop: asyncio.AbstractEventLoop = None,
         heartbeat: Optional[float] = 30.0,
+        **kwargs: Any,
     ) -> "Client":
         """
         creates a client application token from your client credentials.
@@ -120,20 +117,17 @@ class Client:
 
         client_secret: :class:`str`
             An application Client Secret used to generate Access Tokens automatically.
-        loop: Optional[:class:`asyncio.AbstractEventLoop`]
-            The event loop the client will use to run.
 
         Returns
         --------
         A new :class:`Client` instance
         """
         self = cls.__new__(cls)
-        self.loop = loop or asyncio.get_event_loop()
+        self.loop = asyncio.get_event_loop()
         self._http = TwitchHTTP(self, client_id=client_id, client_secret=client_secret)
         self._heartbeat = heartbeat
         self._connection = WSConnection(
             client=self,
-            loop=self.loop,
             initial_channels=None,
             heartbeat=self._heartbeat,
         )  # The only reason we're even creating this is to avoid attribute errors
@@ -153,18 +147,12 @@ class Client:
             pass
         finally:
             self.loop.run_until_complete(self.close())
-            self.loop.close()
 
     async def start(self):
         """|coro|
 
         Connects to the twitch IRC server, and cleanly disconnects when done.
         """
-        if self.loop is not asyncio.get_running_loop():
-            raise RuntimeError(
-                f"Attempted to start a {self.__class__.__name__} instance on a different loop "
-                f"than the one it was initialized with."
-            )
         try:
             await self.connect()
         finally:
@@ -283,7 +271,7 @@ class Client:
         fut = self.loop.create_future()
         tup = (event, predicate, fut)
         self._waiting.append(tup)
-        values = await asyncio.wait_for(fut, timeout, loop=self.loop)
+        values = await asyncio.wait_for(fut, timeout)
         return values
 
     @id_cache()
@@ -515,7 +503,9 @@ class Client:
         data = await self._http.get_top_games()
         return [models.Game(d) for d in data]
 
-    async def fetch_games(self, ids: List[int] = None, names: List[str] = None) -> List[models.Game]:
+    async def fetch_games(
+        self, ids: List[int] = None, names: List[str] = None
+    ) -> List[models.Game]:
         """|coro|
 
         Fetches games by id or name.
@@ -841,7 +831,9 @@ class Client:
             async def event_error(error, data):
                 traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
         """
-        traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
+        traceback.print_exception(
+            type(error), error, error.__traceback__, file=sys.stderr
+        )
 
     async def event_ready(self):
         """|coro|
