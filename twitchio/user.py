@@ -488,14 +488,14 @@ class PartialUser:
         """
         await self._http.delete_unfollow_channel(token, from_id=str(userid), to_id=str(self.id))
 
-    async def fetch_subscriptions(self, token: str, userids: List[int] = None):
+    async def fetch_subscriptions(self, token: str = None, userids: List[int] = None):
         """|coro|
 
         Fetches the subscriptions for this channel.
 
         Parameters
         -----------
-        token: :class:`str`
+        token: Optional[:class:`str`]
             An oauth token with the channel:read:subscriptions scope
         userids: Optional[List[:class:`int`]]
             An optional list of userids to look for
@@ -506,6 +506,7 @@ class PartialUser:
         """
         from .models import SubscriptionEvent
 
+        token = token or self._http.token
         data = await self._http.get_channel_subscriptions(token, str(self.id), user_ids=userids)
         return [SubscriptionEvent(self._http, d, broadcaster=self) for d in data]
 
