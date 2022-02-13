@@ -141,6 +141,10 @@ class Client:
         self._waiting = []
         return self
 
+    async def validate(self):
+        """Validate token and get user associated with the token."""
+        return await self._http.validate()
+
     def run(self):
         """
         A blocking function that starts the asyncio event loop,
