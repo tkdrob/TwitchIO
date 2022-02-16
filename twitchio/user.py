@@ -21,6 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
+from __future__ import annotations
 
 import datetime
 import time
@@ -488,7 +489,7 @@ class PartialUser:
         """
         await self._http.delete_unfollow_channel(token, from_id=str(userid), to_id=str(self.id))
 
-    async def fetch_subscriptions(self, token: str, userids: List[int] = None):
+    async def fetch_subscriptions(self, token: str | None = None, userids: List[int] = None):
         """|coro|
 
         Fetches the subscriptions for this channel.
@@ -506,7 +507,7 @@ class PartialUser:
         """
         from .models import SubscriptionEvent
 
-        data = await self._http.get_channel_subscriptions(token, str(self.id), user_ids=userids)
+        data = await self._http.get_channel_subscriptions(token or self._http.token, str(self.id), user_ids=userids)
         return [SubscriptionEvent(self._http, d, broadcaster=self) for d in data]
 
     async def create_marker(self, token: str, description: str = None):
