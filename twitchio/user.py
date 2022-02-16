@@ -412,7 +412,7 @@ class PartialUser:
         data = await self._http.get_user_follows(token=token, from_id=str(self.id))
         return [FollowEvent(self._http, d, from_=self) for d in data]
 
-    async def fetch_followers(self, token: str = None):
+    async def fetch_followers(self, token: str = None, full_body: bool = False):
         """|coro|
 
         Fetches a list of users that are following this user.
@@ -421,14 +421,18 @@ class PartialUser:
         -----------
         token: Optional[:class:`str`]
             An oauth token to use instead of the bots token
+        full_body: Optional[:class:`bool`]
+            Make True to get full body response untouched
 
         Returns
         --------
-            List[:class:`twitchio.FollowEvent`]
+            List[:class:`twitchio.FollowEvent`], Dict[:class:`str`, :class:`Any`]
         """
         from .models import FollowEvent
 
-        data = await self._http.get_user_follows(to_id=str(self.id))
+        data = await self._http.get_user_follows(to_id=str(self.id), full_body=full_body)
+        if full_body:
+            return data
         return [FollowEvent(self._http, d, to=self) for d in data]
 
     async def fetch_follow(self, to_user: "PartialUser", token: str = None):
