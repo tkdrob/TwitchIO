@@ -2,6 +2,9 @@
 
 2.2.0
 =====
+- http.TwitchHTTP
+    - Close session at aexit if one was not specified
+
 - ext.sounds
     - Added sounds extension. Check the sounds documentation for more information.
 

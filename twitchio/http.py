@@ -21,6 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
+from __future__ import annotations
 
 import asyncio
 import copy
@@ -28,7 +29,7 @@ import datetime
 import logging
 from typing import TYPE_CHECKING, Union, List, Tuple, Any, Dict
 
-import aiohttp
+from aiohttp import ClientSession
 from yarl import URL
 
 from . import errors
@@ -86,12 +87,18 @@ class Route:
 class TwitchHTTP:
 
     TOKEN_BASE = "https://id.twitch.tv/oauth2/token"
+    _close_session = True
 
     def __init__(
-        self, client: "Client", *, api_token: str = None, client_secret: str = None, client_id: str = None, **kwargs
+        self, client: "Client",
+        *,
+        api_token: str = None,
+        client_secret: str = None,
+        client_id: str = None,
+        session: ClientSession | None = None,
+        **kwargs,
     ):
         self.client = client
-        self.session = None
         self.token = api_token
         self.app_token = None
         self._refresh_token = None
@@ -102,6 +109,21 @@ class TwitchHTTP:
 
         self.bucket = RateBucket(method="http")
         self.scopes = kwargs.get("scopes", [])
+
+        if session is None:
+            session = ClientSession()
+            self._close_session = True
+
+        self.session = session
+
+    async def __aenter__(self):
+        """Async enter."""
+        return self
+
+    async def __aexit__(self, *exc_info) -> None:
+        """Async exit."""
+        if self.session and self._close_session:
+            await self.session.close()
 
     async def request(self, route: Route, *, paginate=True, limit=100, full_body=False, force_app_token=False):
         """
@@ -153,9 +175,6 @@ class TwitchHTTP:
             headers["Authorization"] = f"Bearer {self.token}"
 
         headers["Client-ID"] = self.client_id
-
-        if not self.session:
-            self.session = aiohttp.ClientSession()
 
         if self.bucket.limited:
             await self.bucket
@@ -294,9 +313,6 @@ class TwitchHTTP:
             if self.scopes:
                 url += "&scope=" + " ".join(self.scopes)
 
-        if not self.session:
-            self.session = aiohttp.ClientSession()
-
         async with self.session.post(url) as resp:
             if resp.status > 300 or resp.status < 200:
                 raise errors.HTTPException("Unable to generate a token: " + await resp.text())
@@ -309,8 +325,6 @@ class TwitchHTTP:
     async def validate(self, *, token: str = None) -> dict:
         if not token:
             token = self.token
-        if not self.session:
-            self.session = aiohttp.ClientSession()
 
         url = "https://id.twitch.tv/oauth2/validate"
         headers = {"Authorization": f"OAuth {token}"}
