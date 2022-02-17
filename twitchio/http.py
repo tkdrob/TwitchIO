@@ -120,7 +120,7 @@ class TwitchHTTP:
         """Async enter."""
         return self
 
-    async def __aexit__(self, *exc_info) -> None:
+    async def __aexit__(self, *exc_info):
         """Async exit."""
         if self.session and self._close_session:
             await self.session.close()
