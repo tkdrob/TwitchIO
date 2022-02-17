@@ -2,6 +2,9 @@
 
 2.2.0
 =====
+- user.PartialUser
+    - Make token for fetch_subscriptions optional
+
 - ext.sounds
     - Added sounds extension. Check the sounds documentation for more information.
 
