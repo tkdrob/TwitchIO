@@ -21,6 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
+from __future__ import annotations
 
 import asyncio
 import inspect
@@ -38,6 +39,7 @@ from .channel import Channel
 from .message import Message
 from .user import User, PartialUser, SearchUser
 from .cache import user_cache, id_cache
+from aiohttp import ClientSession
 
 __all__ = ("Client",)
 
@@ -75,6 +77,7 @@ class Client:
         initial_channels: Union[list, tuple, Callable] = None,
         loop: asyncio.AbstractEventLoop = None,
         heartbeat: Optional[float] = 30.0,
+        session: ClientSession | None = None,
     ):
 
         self.loop: asyncio.AbstractEventLoop = loop or asyncio.get_event_loop()
@@ -82,7 +85,7 @@ class Client:
 
         token = token.replace("oauth:", "")
 
-        self._http = TwitchHTTP(self, api_token=token, client_secret=client_secret)
+        self._http = TwitchHTTP(self, api_token=token, client_secret=client_secret, session=session)
         self._connection = WSConnection(
             client=self,
             token=token,
@@ -93,6 +96,7 @@ class Client:
 
         self._events = {}
         self._waiting: List[Tuple[str, Callable[[...], bool], asyncio.Future]] = []
+        self._session = session
 
     @classmethod
     def from_client_credentials(
@@ -129,7 +133,7 @@ class Client:
         """
         self = cls.__new__(cls)
         self.loop = loop or asyncio.get_event_loop()
-        self._http = TwitchHTTP(self, client_id=client_id, client_secret=client_secret)
+        self._http = TwitchHTTP(self, client_id=client_id, client_secret=client_secret, session=self._session)
         self._heartbeat = heartbeat
         self._connection = WSConnection(
             client=self,
